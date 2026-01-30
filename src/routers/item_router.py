@@ -59,7 +59,10 @@ async def read_items(
 ):
     """Get all items (paginated). Optionally filter by owner."""
     logger.debug(
-        {"message": "Fetching items", "owner_id": str(owner_id) if owner_id else None}
+        {
+            "message": "Fetching items",
+            "owner_id": str(owner_id) if owner_id else None,
+        }
     )
     return await item_service.read_all(owner_id=owner_id)
 
@@ -99,6 +102,29 @@ async def read_item(
         message="Item retrieved",
         data=ItemPublic.model_validate(result),
     )
+
+
+@ItemRouter.get("/{item_id}/similar", response_model=Page[ItemPublic])
+@tracer.observe()
+async def get_similar_items(
+    item_id: UUID,
+    logger: Logger,
+    item_service: Annotated[ItemService, Depends()],
+    limit: int = 5,
+):
+    """Get similar items based on category and price range.
+
+    Finds items in the same category with similar prices.
+    Excludes the original item from results.
+    """
+    logger.debug(
+        {
+            "message": "Fetching similar items",
+            "item_id": str(item_id),
+            "limit": limit,
+        }
+    )
+    return await item_service.find_similar(item_id, limit)
 
 
 @ItemRouter.patch("/{item_id}", response_model=Response[ItemPublic])

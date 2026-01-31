@@ -17,6 +17,9 @@ target_metadata = SQLModel.metadata
 url = ""
 if app_config.database.url:
     url = app_config.database.url
+elif app_config.database.kind == "sqlite":
+    # SQLite uses aiosqlite for async
+    url = f"sqlite+aiosqlite:///{app_config.database.name}"
 else:
     url = (
         f"{app_config.database.kind}+{app_config.database.adapter}://"

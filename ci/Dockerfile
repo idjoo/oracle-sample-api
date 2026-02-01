@@ -25,10 +25,16 @@ FROM python:3.13-slim
 ENV TZ="Asia/Jakarta"
 ENV PYTHONWARNINGS="ignore::UserWarning"
 
+# SQLite configuration via environment variables
+ENV DATABASE__KIND=sqlite
+ENV DATABASE__NAME=/app/data/sample.db
+
 WORKDIR /app
 
 RUN useradd --uid 1000 --user-group --system app \
-  && chown --recursive app:app /app
+  && chown --recursive app:app /app \
+  && mkdir -p /app/data \
+  && chown app:app /app/data
 
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
 

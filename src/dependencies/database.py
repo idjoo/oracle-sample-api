@@ -24,22 +24,35 @@ def get_engine() -> AsyncEngine:
     if _engine is None:
         url = config.database.url
         if not url:
-            url = (
-                f"{config.database.kind}+{config.database.adapter}://"
-                f"{config.database.username}:{quote(config.database.password)}@"
-                f"{config.database.host}:{config.database.port}/"
-                f"{config.database.name}"
-            )
+            # Check if using SQLite
+            if config.database.kind == "sqlite":
+                url = f"sqlite+aiosqlite:///{config.database.name}"
+            else:
+                url = (
+                    f"{config.database.kind}+{config.database.adapter}://"
+                    f"{config.database.username}:{quote(config.database.password)}@"
+                    f"{config.database.host}:{config.database.port}/"
+                    f"{config.database.name}"
+                )
 
         logger.info(f"creating database engine: {url}")
 
-        _engine = create_async_engine(
-            url=url,
-            echo=config.logging.level == "debug",
-            future=True,
-            pool_size=20,
-            max_overflow=10,
-        )
+        # SQLite doesn't support pool_size/max_overflow
+        if "sqlite" in url:
+            _engine = create_async_engine(
+                url=url,
+                echo=config.logging.level == "debug",
+                future=True,
+                connect_args={"check_same_thread": False},
+            )
+        else:
+            _engine = create_async_engine(
+                url=url,
+                echo=config.logging.level == "debug",
+                future=True,
+                pool_size=20,
+                max_overflow=10,
+            )
 
     return _engine
 

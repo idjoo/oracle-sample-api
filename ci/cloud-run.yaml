@@ -23,15 +23,16 @@ spec:
             - name: http1
               containerPort: 8080
           env:
-            - name: CONFIG_YAML
-              value: /configs/config.yaml
+            - name: DATABASE__KIND
+              value: sqlite
+            - name: DATABASE__NAME
+              value: /app/data/sample.db
+            - name: ENVIRONMENT
+              value: dev
           resources:
             limits:
               cpu: 1000m
               memory: 512Mi
-          volumeMounts:
-            - name: config
-              mountPath: /configs
           livenessProbe:
             timeoutSeconds: 10
             periodSeconds: 10
@@ -46,11 +47,3 @@ spec:
             httpGet:
               path: /health
               port: 8080
-      volumes:
-        - name: config
-          secret:
-            secretName: "{{_SERVICE}}-config"
-            items:
-              - key: latest
-                path: config.yaml
-
